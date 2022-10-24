@@ -25,37 +25,36 @@ import (
 
 // Device paths etc.
 const (
-	RpBufSize = 512
+	RpBufSize  = 512
 	rpmDevBase = "/dev/rpmsg_pru3%d"
-	rpBase = "/sys/class/remoteproc/remoteproc%d/%s"
+	rpBase     = "/sys/class/remoteproc/remoteproc%d/%s"
 )
-
 
 // AM3xx
 // Memory values
 const (
-	am3xxPru0Ram   = 0x00000000
-	am3xxPru1Ram   = 0x00002000
-	am3xxSharedRam = 0x00010000
+	am3xxPru0Ram       = 0x00000000
+	am3xxPru1Ram       = 0x00002000
+	am3xxSharedRam     = 0x00010000
 	am3xxRamSize       = 8 * 1024
 	am3xxSharedRamSize = 12 * 1024
 
 	am3xxAddress = 0x4A300000
-	am3xxSize = 0x80000
+	am3xxSize    = 0x80000
 )
 
 const (
-    waitTimeout = 2 * time.Second
+	waitTimeout = 2 * time.Second
 )
 
 var Order = binary.LittleEndian
 
 type PRU struct {
-	unit int
-	tx *os.File
-	open bool
+	unit    int
+	tx      *os.File
+	open    bool
 	running bool
-	cb func ([]byte)
+	cb      func([]byte)
 
 	// These are set if /dev/mem is accessible
 	mmapFile *os.File
@@ -65,13 +64,13 @@ type PRU struct {
 	SharedRam ram // Shared RAM byte array
 }
 
-var prus = [...]PRU {
-{ unit: 0, },
-{ unit: 1, },
+var prus = [...]PRU{
+	{unit: 0},
+	{unit: 1},
 }
 
 // Open initialises the PRU.
-func Open(unit int) (* PRU, error) {
+func Open(unit int) (*PRU, error) {
 	if unit < 0 || unit >= len(prus) {
 		return nil, fmt.Errorf("illegal unit")
 	}
@@ -118,7 +117,7 @@ func (p *PRU) Close() {
 }
 
 // Stop writes the stop command to the PRU
-func (p* PRU) Stop() error {
+func (p *PRU) Stop() error {
 	if p.tx != nil {
 		p.tx.Close()
 		p.tx = nil
@@ -132,7 +131,7 @@ func (p* PRU) Stop() error {
 
 // Start writes the start command to the PRU, and sets up
 // the RPMsg device (if created).
-func (p* PRU) Start() error {
+func (p *PRU) Start() error {
 	err := p.write("state", "start")
 	if err == nil {
 		p.running = true
@@ -154,7 +153,7 @@ func (p* PRU) Start() error {
 					for {
 						n, err := f.Read(buf)
 						if err != nil {
-							break;
+							break
 						}
 						cb(buf[0:n])
 					}
@@ -179,7 +178,7 @@ func (p *PRU) Send(buf []byte) error {
 
 // Callback sets the callback for any events
 // This must be set before the PRU is started.
-func (p *PRU) Callback(f func ([]byte)) error {
+func (p *PRU) Callback(f func([]byte)) error {
 	if p.running {
 		return fmt.Errorf("Cannot install callback after PRU has started")
 	}
@@ -199,7 +198,7 @@ func (p *PRU) Load(name string) error {
 
 // write sends the string to the remoteproc filename
 func (p *PRU) write(name, command string) error {
-	f := fmt.Sprintf(rpBase, p.unit + 1, name)
+	f := fmt.Sprintf(rpBase, p.unit+1, name)
 	fd, err := os.OpenFile(f, os.O_RDWR, 0)
 	if err != nil {
 		return err
@@ -220,7 +219,7 @@ func waitForPermission(name string) (*os.File, error) {
 	for tout = 0; tout < waitTimeout; tout += sl {
 		f, err = os.OpenFile(name, os.O_RDWR, 0)
 		if err == nil || !os.IsPermission(err) {
-			break;
+			break
 		}
 		time.Sleep(sl)
 	}

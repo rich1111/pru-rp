@@ -36,7 +36,7 @@ func main() {
 	}
 
 	var counter sync.WaitGroup
-	p.Callback(func (msg []byte) {
+	p.Callback(func(msg []byte) {
 		log.Printf("Rx bytes = [%s]", msg)
 		counter.Done()
 	})

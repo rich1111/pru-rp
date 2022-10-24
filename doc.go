@@ -13,7 +13,6 @@
 // limitations under the License.
 
 /*
-
 Package pru-rp provides a Go library to access the Programmable Real-time Units (PRU)
 of the TI AM335x (https://www.ti.com/processors/sitara-arm/applications/industrial-communications.html)
 The commonly available product with this part is the Beaglebone Black (https://beagleboard.org/black)
@@ -28,6 +27,5 @@ for that, the standard TI PRU S/W support package should be used
 
 Complete documentation is available via https://github.com/aamcrae/pru-rp, and through godoc at
 https://pkg.go.dev/github.com/aamcrae/pru-rp
-
 */
 package pru
