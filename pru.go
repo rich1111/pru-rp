@@ -15,9 +15,12 @@
 package pru
 
 import (
+	"encoding/binary"
 	"fmt"
 	"os"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 // Device paths etc.
@@ -25,9 +28,27 @@ const (
 	RpBufSize = 512
 	rpmDevBase = "/dev/rpmsg_pru3%d"
 	rpBase = "/sys/class/remoteproc/remoteproc%d/%s"
+)
 
+
+// AM3xx
+// Memory values
+const (
+	am3xxPru0Ram   = 0x00000000
+	am3xxPru1Ram   = 0x00002000
+	am3xxSharedRam = 0x00010000
+	am3xxRamSize       = 8 * 1024
+	am3xxSharedRamSize = 12 * 1024
+
+	am3xxAddress = 0x4A300000
+	am3xxSize = 0x80000
+)
+
+const (
     waitTimeout = 2 * time.Second
 )
+
+var Order = binary.LittleEndian
 
 type PRU struct {
 	unit int
@@ -35,6 +56,13 @@ type PRU struct {
 	open bool
 	running bool
 	cb func ([]byte)
+
+	// These are set if /dev/mem is accessible
+	mmapFile *os.File
+	mem      []byte
+
+	Ram       ram // PRU unit data ram
+	SharedRam ram // Shared RAM byte array
 }
 
 var prus = [...]PRU {
@@ -49,9 +77,30 @@ func Open(unit int) (* PRU, error) {
 	}
 	p := &prus[unit]
 	if !p.open {
-		// On first open, ensure the PRU is stopped.
-		p.open = true
+		// On first open, ensure the PRU is stopped, and set up
+		// the shared memory mappings (if accessible).
 		p.Stop()
+		p.open = true
+		p.mmapFile = nil
+		p.mem = nil
+		p.Ram = nil
+		p.SharedRam = nil
+		m, err := os.OpenFile("/dev/mem", os.O_RDWR|os.O_SYNC, 0660)
+		if err == nil {
+			mem, err := unix.Mmap(int(m.Fd()), am3xxAddress, am3xxSize, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_SHARED)
+			if err == nil {
+				p.mmapFile = m
+				p.mem = mem
+				if unit == 0 {
+					p.Ram = p.mem[am3xxPru0Ram : am3xxPru0Ram+am3xxRamSize]
+				} else {
+					p.Ram = p.mem[am3xxPru1Ram : am3xxPru1Ram+am3xxRamSize]
+				}
+				p.SharedRam = p.mem[am3xxSharedRam : am3xxSharedRam+am3xxSharedRamSize]
+			} else {
+				m.Close()
+			}
+		}
 	}
 	return p, nil
 }
@@ -60,6 +109,12 @@ func Open(unit int) (* PRU, error) {
 func (p *PRU) Close() {
 	p.Stop()
 	p.open = false
+	if p.mmapFile != nil {
+		unix.Munmap(p.mem)
+		p.mmapFile.Close()
+		p.mmapFile = nil
+		p.mem = nil
+	}
 }
 
 // Stop writes the stop command to the PRU
