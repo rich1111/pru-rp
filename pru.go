@@ -148,7 +148,6 @@ func (p *PRU) Start() error {
 			if p.cb != nil {
 				// If a callback is set, start a go routine to read it.
 				go func(cb func([]byte)) {
-					defer f.Close()
 					buf := make([]byte, RpBufSize)
 					for {
 						n, err := f.Read(buf)
@@ -208,9 +207,8 @@ func (p *PRU) write(name, command string) error {
 	return err
 }
 
-// After the RPMsg is created, there is a short time before the
-// permissions get set correctly, so wait for the file to become
-// writable.
+// After the RPMsg device file is created, there is a short time before the
+// permissions get set correctly, so wait for the file to become writable.
 func waitForPermission(name string) (*os.File, error) {
 	var tout time.Duration
 	var err error
