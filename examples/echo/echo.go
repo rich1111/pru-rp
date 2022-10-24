@@ -24,8 +24,6 @@ import (
 	"github.com/aamcrae/pru-rp"
 )
 
-var counter sync.WaitGroup
-
 func main() {
 	p, err := pru.Open(0)
 	if err != nil {
@@ -36,7 +34,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Load: %v", err)
 	}
-	p.Callback(rx)
+
+	var counter sync.WaitGroup
+	p.Callback(func (msg []byte) {
+		log.Printf("Rx bytes = [%s]", msg)
+		counter.Done()
+	})
 	p.Start()
 	for i := 0; i < 10; i++ {
 		err := p.Send([]byte(fmt.Sprintf("test %d", i)))
@@ -47,9 +50,4 @@ func main() {
 		}
 	}
 	counter.Wait()
-}
-
-func rx(buf []byte) {
-	log.Printf("Rx bytes = [%s]", buf)
-	counter.Done()
 }
