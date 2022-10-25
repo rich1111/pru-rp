@@ -100,6 +100,7 @@ func Open(unit int) (*PRU, error) {
 				}
 				p.SharedRam = p.mem[am3xxSharedRam : am3xxSharedRam+am3xxSharedRamSize]
 			} else {
+				log.Printf("PRU shared RAM unavailable (%v)", err)
 				m.Close()
 			}
 		} else {
@@ -171,7 +172,7 @@ func (p *PRU) Start(rpmsg bool) error {
 // Send sends a message to this PRU via RPMsg
 func (p *PRU) Send(buf []byte) error {
 	if p.tx == nil {
-		return fmt.Errorf("no RPMsg device opened")
+		return fmt.Errorf("no RPMsg device")
 	}
 	if len(buf) >= RpBufSize {
 		return fmt.Errorf("RPMsg buffer size too big")
@@ -212,8 +213,8 @@ func (p *PRU) write(name, command string) error {
 	return err
 }
 
-// After the RPMsg device file is created, there is a short time before the
-// permissions get set correctly, so wait for the file to become writable.
+// After the RPMsg vdev is created, there is a short time before the
+// permissions get set correctly, so wait for the device to become writable.
 func waitForPermission(name string) (*os.File, error) {
 	var tout time.Duration
 	var err error
