@@ -28,7 +28,7 @@ func main() {
 	p.Callback(func (msg []byte) { // Add callback
 		fmt.Printf("msg = [%s]\n", buf)
     })
-	p.Start()                      // Start the PRU
+	p.Start(true)                 // Start the PRU (RPMsg required)
 	p.Send([]byte("Test string"))  // Send a message.
 	time.Sleep(time.Second)        // Wait for message reply
 }
@@ -38,7 +38,9 @@ func main() {
 
 The host CPU can access the various RAM blocks on the PRU subsystem, such as the PRU unit 0 and 1 8KB RAM
 and the 12KB shared RAM. These RAM blocks are exported as byte slices (```[]byte```) initialised over the
-RAM block as a byte array.
+RAM block as a byte array. The memory is accessed via ```/dev/mem```, so to use this facility, the program must
+have r/w permission to this device. This can be done either by running the program via ```sudo```, or by changing
+the ```/dev/mem``` permissions (e.g to 0660 and ensure that the program user account belongs to group ```kmem```).
 
 There are a number of ways that applications can access the shared memory as structured access.
 For ease of access, the package exports a variable ```Order``` (as a ```binary/encoding Order```).

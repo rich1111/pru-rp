@@ -40,7 +40,7 @@ func main() {
 		log.Printf("Rx bytes = [%s]", msg)
 		counter.Done()
 	})
-	p.Start()
+	p.Start(true)
 	for i := 0; i < 10; i++ {
 		err := p.Send([]byte(fmt.Sprintf("test %d", i)))
 		if err != nil {

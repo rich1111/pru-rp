@@ -17,6 +17,7 @@ package pru
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -84,6 +85,8 @@ func Open(unit int) (*PRU, error) {
 		p.mem = nil
 		p.Ram = nil
 		p.SharedRam = nil
+		// Attempt to access the shared memory. If not accessible,
+		// continue, but log a warning.
 		m, err := os.OpenFile("/dev/mem", os.O_RDWR|os.O_SYNC, 0660)
 		if err == nil {
 			mem, err := unix.Mmap(int(m.Fd()), am3xxAddress, am3xxSize, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_SHARED)
@@ -99,6 +102,8 @@ func Open(unit int) (*PRU, error) {
 			} else {
 				m.Close()
 			}
+		} else {
+			log.Printf("PRU shared RAM unavailable (%v)", err)
 		}
 	}
 	return p, nil
@@ -130,20 +135,19 @@ func (p *PRU) Stop() error {
 }
 
 // Start writes the start command to the PRU, and sets up
-// the RPMsg device (if created).
-func (p *PRU) Start() error {
+// the RPMsg device (if required). rpmsg is set if
+// the PRU requires the RPMsg virtual device.
+func (p *PRU) Start(rpmsg bool) error {
 	err := p.write("state", "start")
 	if err == nil {
-		p.running = true
-		// Check for a RPMsg device being created.
-		f, err := waitForPermission(fmt.Sprintf(rpmDevBase, p.unit))
-		if err != nil {
-			p.tx = nil
-			if p.cb != nil {
-				p.Stop()
-				return fmt.Errorf("callback set, but no RPMsg device present")
+		p.tx = nil
+		if rpmsg {
+			// Check for a RPMsg device being created.
+			name := fmt.Sprintf(rpmDevBase, p.unit)
+			f, err := waitForPermission(name)
+			if err != nil {
+				return fmt.Errorf("rpmsg %s: %v", name, err)
 			}
-		} else {
 			p.tx = f
 			if p.cb != nil {
 				// If a callback is set, start a go routine to read it.
@@ -159,6 +163,7 @@ func (p *PRU) Start() error {
 				}(p.cb)
 			}
 		}
+		p.running = true
 	}
 	return err
 }
