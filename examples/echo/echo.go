@@ -24,30 +24,40 @@ import (
 	"github.com/aamcrae/pru-rp"
 )
 
+var counter sync.WaitGroup
+
 func main() {
-	p, err := pru.Open(0)
+	counter.Add(2)
+	go run(0, "am335x-pru0-echo0-fw")
+	go run(1, "am335x-pru1-echo1-fw")
+	counter.Wait()
+}
+
+func run(unit int, fw string) {
+	var msgs sync.WaitGroup
+	p, err := pru.Open(unit)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
 	defer p.Close()
-	err = p.Load("am335x-pru0-echo0-fw")
+	err = p.Load(fw)
 	if err != nil {
-		log.Fatalf("Load: %v", err)
+		log.Fatalf("Load %s: %v", fw, err)
 	}
 
-	var counter sync.WaitGroup
 	p.Callback(func(msg []byte) {
-		log.Printf("Rx bytes = [%s]", msg)
-		counter.Done()
+		log.Printf("PRU%d: Rx = [%s]", unit, msg)
+		msgs.Done()
 	})
 	p.Start(true)
 	for i := 0; i < 10; i++ {
-		err := p.Send([]byte(fmt.Sprintf("test %d", i)))
+		err := p.Send([]byte(fmt.Sprintf("msg %d to PRU%d", i, unit)))
 		if err != nil {
-			log.Printf("Send: %v", err)
+			log.Printf("PRU%d: Send: %v", unit, err)
 		} else {
-			counter.Add(1)
+			msgs.Add(1)
 		}
 	}
-	counter.Wait()
+	msgs.Wait()
+	counter.Done()
 }
