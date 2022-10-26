@@ -14,7 +14,7 @@ The examples used are:
 
 | Example | Firmware file | Example source from package |
 |---------|---------------|-----------------------------|
-| echo | `am335x-pru0-echo0-fw` | `examples/am335x/PRU_RPMsg_Echo_Interrupt0` |
+| echo | `am335x-pru{0,1}-echo{0,1}-fw` | `examples/am335x/PRU_RPMsg_Echo_Interrupt{0,1}` |
 
 ## Sample skeleton application
 
