@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/aamcrae/pru-rp"
 )
@@ -57,6 +58,7 @@ func run(unit int, fw string) {
 		} else {
 			msgs.Add(1)
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 	msgs.Wait()
 	counter.Done()
