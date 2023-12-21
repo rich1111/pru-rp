@@ -47,16 +47,16 @@ func run(unit int, fw string) {
 	}
 
 	p.Callback(func(msg []byte) {
-		log.Printf("PRU%d: Rx = [%s]", unit, msg)
+		log.Printf("PRU%d: Rx OK [%s]", unit, msg)
 		msgs.Done()
 	})
 	p.Start(true)
 	for i := 0; i < 10; i++ {
+		msgs.Add(1)
 		err := p.Send([]byte(fmt.Sprintf("msg %d to PRU%d", i, unit)))
 		if err != nil {
-			log.Printf("PRU%d: Send: %v", unit, err)
-		} else {
-			msgs.Add(1)
+			log.Printf("PRU%d: Send error: %v", unit, err)
+			msgs.Done()
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
