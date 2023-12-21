@@ -9,7 +9,16 @@ godoc for this package is [available](https://pkg.go.dev/github.com/aamcrae/pru-
 
 The examples use firmware from the [TI PRU Software Support package](https://git.ti.com/cgit/pru-software-support-package)
 examples.
-The firmware can be built from the examples and stored in /lib/firmware.
+The firmware can be built from the example, and the relevant .out files copied
+to /lib/firmware:
+
+```
+cd examples/am335x/PRU_RPMsg_Echo_Interrupt0
+make
+sudo cp gen/PRU_RPMsg_Echo_Interrupt0.out /lib/firmware/am335x-pru0-echo0-fw
+```
+
+Build and install the am335x-pru1-echo1-fw firmware in a similar way.
 The examples used are:
 
 | Example | Firmware file | Example source from package |
