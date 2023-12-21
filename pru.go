@@ -100,7 +100,7 @@ func Open(unit int) (*PRU, error) {
 				}
 				p.SharedRam = p.mem[am3xxSharedRam : am3xxSharedRam+am3xxSharedRamSize]
 			} else {
-				log.Printf("PRU shared RAM unavailable (%v)", err)
+				log.Printf("PRU RAM mmap failed (%v)", err)
 				m.Close()
 			}
 		} else {

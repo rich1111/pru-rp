@@ -47,9 +47,18 @@ func main() {
 
 The host CPU can access the various RAM blocks on the PRU subsystem, such as the PRU unit 0 and 1 8KB RAM
 and the 12KB shared RAM. These RAM blocks are exported as byte slices (```[]byte```) initialised over the
-RAM block as a byte array. The memory is accessed via ```/dev/mem```, so to use this facility, the program must
-have r/w permission to this device. This can be done either by running the program via ```sudo```, or by changing
-the ```/dev/mem``` permissions (e.g to 0660 and ensure that the program user account belongs to group ```kmem```).
+RAM block as a byte array.
+
+### Permissions
+
+The PRU memory is accessible via the ```/dev/mem``` device, so to read or write to the memory,
+the program must have read/write access to this device.
+The easiest way is by running the program as root, or using ```sudo```.
+With earlier kernels, it was possible to change the ```/dev/mem``` permissions
+to 0660 (to allow group r/w access), and add the user account to group ```kmem```, but
+this is no longer enough as the CAP_SYS_RAWIO capability is also required to access this device.
+
+### Shared Memory API
 
 There are a number of ways that applications can access the shared memory as structured access.
 For ease of access, the package exports a variable ```Order``` (as a ```binary/encoding Order```).
@@ -101,15 +110,19 @@ A Reader/Writer interface is available by using the ```Open``` method on any of 
 	...
 ```
 
+### Synchronisation
+
 A caveat is that the RAM is shared with the PRU, and Go does not have any explicit way
 of indicating to the compiler that the memory is shared, so potentially there are patterns
-of access where the compiler may optimise out accesses if care is not taken - the access may also
+of access where the compiler may optimise out accesses if care is not taken - reads and writes may also
 be subject to reordering.
 
-If the memory access is done when the PRU units are disabled, then using the Reader/Writer interface or the
+If the memory is accessed when the PRU units are disabled, then using the Reader/Writer interface or the
 ```binary/encoding``` methods described above should be sufficient.
 
-For accesses that do rely on explicit ordering and reading or writing, it is recommended that the ```sync/ataomic```
+For accesses that do rely on explicit ordering for reading or writing,
+or for when memory accesses may be concurrent with PRU access,
+it is recommended that the ```sync/ataomic```
 and ```unsafe``` packages are used to access the memory:
 
 ```
