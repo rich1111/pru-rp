@@ -17,7 +17,6 @@ package pru
 import (
 	"encoding/binary"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -50,6 +49,8 @@ const (
 
 var Order = binary.LittleEndian
 
+type ram []byte
+
 type PRU struct {
 	unit    int
 	tx      *os.File
@@ -60,9 +61,6 @@ type PRU struct {
 	// These are set if /dev/mem is accessible
 	mmapFile *os.File
 	mem      []byte
-
-	Ram       ram // PRU unit data ram
-	SharedRam ram // Shared RAM byte array
 }
 
 var prus = [...]PRU{
@@ -83,31 +81,53 @@ func Open(unit int) (*PRU, error) {
 		p.open = true
 		p.mmapFile = nil
 		p.mem = nil
-		p.Ram = nil
-		p.SharedRam = nil
-		// Attempt to access the shared memory. If not accessible,
-		// continue, but log a warning.
-		m, err := os.OpenFile("/dev/mem", os.O_RDWR|os.O_SYNC, 0660)
-		if err == nil {
-			mem, err := unix.Mmap(int(m.Fd()), am3xxAddress, am3xxSize, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_SHARED)
-			if err == nil {
-				p.mmapFile = m
-				p.mem = mem
-				if unit == 0 {
-					p.Ram = p.mem[am3xxPru0Ram : am3xxPru0Ram+am3xxRamSize]
-				} else {
-					p.Ram = p.mem[am3xxPru1Ram : am3xxPru1Ram+am3xxRamSize]
-				}
-				p.SharedRam = p.mem[am3xxSharedRam : am3xxSharedRam+am3xxSharedRamSize]
-			} else {
-				log.Printf("PRU RAM mmap failed (%v)", err)
-				m.Close()
-			}
-		} else {
-			log.Printf("PRU shared RAM unavailable (%v)", err)
-		}
 	}
 	return p, nil
+}
+
+// Ram creates a type that can use a Reader/Writer interface to the
+// underlying byte array of this PRU's RAM.
+func (p *PRU) Ram() (*RamIO, error) {
+	if err := p.openRam(); err != nil {
+		return nil, err
+	}
+	var base ram
+	if p.unit == 0 {
+		base = p.mem[am3xxPru0Ram : am3xxPru0Ram+am3xxRamSize]
+	} else {
+		base = p.mem[am3xxPru1Ram : am3xxPru1Ram+am3xxRamSize]
+	}
+	return &RamIO{Ram: base, max: cap(base)}, nil
+}
+
+// SharedRam creates a type that can use a Reader/Writer interface to the
+// underlying byte array for the shared PRU RAM.
+func (p *PRU) SharedRam() (*RamIO, error) {
+	if err := p.openRam(); err != nil {
+		return nil, err
+	}
+	base := p.mem[am3xxSharedRam : am3xxSharedRam+am3xxSharedRamSize]
+	return &RamIO{Ram: base, max: cap(base)}, nil
+}
+
+// openRam initialises the access to the PRU RAM and shared RAM.
+func (p *PRU) openRam() error {
+	// Check whether the RAM is already open.
+	if p.mem != nil {
+		return nil
+	}
+	// Attempt to access the shared memory via /dev/mem.
+	m, err := os.OpenFile("/dev/mem", os.O_RDWR|os.O_SYNC, 0660)
+	if err != nil {
+		return err
+	}
+	mem, err := unix.Mmap(int(m.Fd()), am3xxAddress, am3xxSize, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_SHARED)
+	if err != nil {
+		return err
+	}
+	p.mmapFile = m
+	p.mem = mem
+	return nil
 }
 
 // Close shuts down the PRU

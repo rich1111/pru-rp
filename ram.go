@@ -19,24 +19,16 @@ import (
 	"io"
 )
 
-type ram []byte
-
-// Open creates a type that can use a Reader/Writer interface to the
-// underlying byte array.
-func (base ram) Open() *RamIO {
-	return &RamIO{Data: base, max: cap(base)}
-}
-
 // RamIO implements various io interfaces, using an underlying byte array.
 type RamIO struct {
-	Data    []byte
+	Ram     []byte
 	current int
 	max     int
 }
 
 // Write copies the byte slice into the RAM array
 func (r *RamIO) Write(p []byte) (int, error) {
-	n := copy(r.Data[r.current:], p)
+	n := copy(r.Ram[r.current:], p)
 	r.current += n
 	if n != len(p) {
 		return n, io.EOF
@@ -57,7 +49,7 @@ func (r *RamIO) WriteByte(b byte) error {
 	if r.current >= r.max {
 		return io.EOF
 	}
-	r.Data[r.current] = b
+	r.Ram[r.current] = b
 	r.current++
 	return nil
 }
@@ -85,13 +77,13 @@ func (r *RamIO) ReadByte() (byte, error) {
 	if r.current >= r.max {
 		return 0, io.EOF
 	}
-	b := r.Data[r.current]
+	b := r.Ram[r.current]
 	r.current++
 	return b, nil
 }
 
 func (r *RamIO) Read(p []byte) (int, error) {
-	n := copy(p, r.Data[r.current:])
+	n := copy(p, r.Ram[r.current:])
 	r.current += n
 	if n != len(p) {
 		return n, io.EOF

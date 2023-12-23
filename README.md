@@ -66,28 +66,31 @@ This allows use of the ```binary/encoding``` package:
 
 ```
 	p := pru.Open()
-	pru.Order.PutUint32(p.Ram[0:], word1)
-	pru.Order.PutUint32(p.Ram[4:], word2)
-	pru.Order.PutUint16(p.Ram[offs:], word2)
+	r := pru.Ram()
+	pru.Order.PutUint32(r.Ram[0:], word1)
+	pru.Order.PutUint32(r.Ram[4:], word2)
+	pru.Order.PutUint16(r.Ram[offs:], word2)
 	...
-	v := pru.Order.Uint32(p.Ram[20:])
+	v := pru.Order.Uint32(r.Ram[20:])
 ```
 
 Of course, since the RAM is presented as a byte slice, any method that
 uses a byte slice can work:
 
 ```
+	r := pru.Ram()
+	s := pru.SharedRam()
 	f := os.Open("MyFile")
-	f.Read(p.Ram[0x100:0x1FF])
+	f.Read(r.Ram[0x100:0x1FF])
 	data := make([]byte, 0x200)
-	copy(data, p.SharedRam[0x400:])
+	copy(data, s.Ram[0x400:])
 ```
 
-A Reader/Writer interface is available by using the ```Open``` method on any of the shared RAM fields:
+The RAM objects support the Reader/Writer interface:
 
 ```
 	p := pru.Open()
-	ram := p.Ram.Open()
+	r := p.Ram()
 	params := []interface{}{
 		uint32(event),
 		uint32(intrBit),
@@ -98,15 +101,15 @@ A Reader/Writer interface is available by using the ```Open``` method on any of 
 		uint32(out),
 	}
 	for _, v := range params {
-		binary.Write(ram, pru.Order, v)
+		binary.Write(r, pru.Order, v)
 	}
 	...
-	ram.Seek(my_offset, io.SeekStart)
-	fmt.Fprintf(ram, "Config string %d, %d", c1, c2)
-	ram.WriteAt([]byte("A string to be written to PRU RAM"), 0x800)
-	ram.Seek(0, io.SeekStart)
-	b1 := ram.ReadByte()
-	b2 := ram.ReadByte()
+	r.Seek(my_offset, io.SeekStart)
+	fmt.Fprintf(r, "Config string %d, %d", c1, c2)
+	r.WriteAt([]byte("A string to be written to PRU RAM"), 0x800)
+	r.Seek(0, io.SeekStart)
+	b1 := r.ReadByte()
+	b2 := r.ReadByte()
 	...
 ```
 
@@ -127,8 +130,9 @@ and ```unsafe``` packages are used to access the memory:
 
 ```
 	p := pru.Open()
-	shared_rx := (*uint32)(unsafe.Pointer(&p.Ram[rx_offs]))
-	shared_tx := (*uint32)(unsafe.Pointer(&p.Ram[tx_offs]))
+	r := pru.Ram()
+	shared_rx := (*uint32)(unsafe.Pointer(&r.Ram[rx_offs]))
+	shared_tx := (*uint32)(unsafe.Pointer(&r.Ram[tx_offs]))
 	// Load and run PRU program ...
 	for {
 		n := atomic.LoadUint32(shared_rx)
