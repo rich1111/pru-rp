@@ -97,7 +97,7 @@ func (p *PRU) Ram() (*RamIO, error) {
 	} else {
 		base = p.mem[am3xxPru1Ram : am3xxPru1Ram+am3xxRamSize]
 	}
-	return &RamIO{Ram: base, max: cap(base)}, nil
+	return &RamIO{Memory: base, max: cap(base)}, nil
 }
 
 // SharedRam creates a type that can use a Reader/Writer interface to the
@@ -107,7 +107,7 @@ func (p *PRU) SharedRam() (*RamIO, error) {
 		return nil, err
 	}
 	base := p.mem[am3xxSharedRam : am3xxSharedRam+am3xxSharedRamSize]
-	return &RamIO{Ram: base, max: cap(base)}, nil
+	return &RamIO{Memory: base, max: cap(base)}, nil
 }
 
 // openRam initialises the access to the PRU RAM and shared RAM.

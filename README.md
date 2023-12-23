@@ -67,11 +67,11 @@ This allows use of the ```binary/encoding``` package:
 ```
 	p := pru.Open()
 	r := pru.Ram()
-	pru.Order.PutUint32(r.Ram[0:], word1)
-	pru.Order.PutUint32(r.Ram[4:], word2)
-	pru.Order.PutUint16(r.Ram[offs:], word2)
+	pru.Order.PutUint32(r.Memory[0:], word1)
+	pru.Order.PutUint32(r.Memory[4:], word2)
+	pru.Order.PutUint16(r.Memory[offs:], word2)
 	...
-	v := pru.Order.Uint32(r.Ram[20:])
+	v := pru.Order.Uint32(r.Memory[20:])
 ```
 
 Of course, since the RAM is presented as a byte slice, any method that
@@ -81,9 +81,9 @@ uses a byte slice can work:
 	r := pru.Ram()
 	s := pru.SharedRam()
 	f := os.Open("MyFile")
-	f.Read(r.Ram[0x100:0x1FF])
+	f.Read(r.Memory[0x100:0x1FF])
 	data := make([]byte, 0x200)
-	copy(data, s.Ram[0x400:])
+	copy(data, s.Memory[0x400:])
 ```
 
 The RAM objects support the Reader/Writer interface:
@@ -131,8 +131,8 @@ and ```unsafe``` packages are used to access the memory:
 ```
 	p := pru.Open()
 	r := pru.Ram()
-	shared_rx := (*uint32)(unsafe.Pointer(&r.Ram[rx_offs]))
-	shared_tx := (*uint32)(unsafe.Pointer(&r.Ram[tx_offs]))
+	shared_rx := (*uint32)(unsafe.Pointer(&r.Memory[rx_offs]))
+	shared_tx := (*uint32)(unsafe.Pointer(&r.Memory[tx_offs]))
 	// Load and run PRU program ...
 	for {
 		n := atomic.LoadUint32(shared_rx)
