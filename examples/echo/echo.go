@@ -51,6 +51,7 @@ func run(unit int, fw string) {
 		msgs.Done()
 	})
 	p.Start(true)
+	log.Printf("PRU %d state: %s", unit, p.Status().String())
 	for i := 0; i < 10; i++ {
 		msgs.Add(1)
 		err := p.Send([]byte(fmt.Sprintf("msg %d to PRU%d", i, unit)))

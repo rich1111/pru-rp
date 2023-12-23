@@ -17,10 +17,20 @@ package pru
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
 	"golang.org/x/sys/unix"
+)
+
+type Status int
+
+// Status values
+const (
+	StatusOffline Status = iota
+	StatusRunning
+	StatusUnknown
 )
 
 // Device paths etc.
@@ -142,6 +152,28 @@ func (p *PRU) Close() {
 	}
 }
 
+// Status returns the current status of the PRU
+func (p *PRU) Status() Status {
+	f := fmt.Sprintf(rpBase, p.unit+1, "state")
+	fd, err := os.OpenFile(f, os.O_RDONLY, 0)
+	if err != nil {
+		return StatusUnknown
+	}
+	defer fd.Close()
+	s, err := io.ReadAll(fd)
+	if err != nil {
+		return StatusUnknown
+	}
+	switch string(s) {
+	case "offline\n":
+		return StatusOffline
+	case "running\n":
+		return StatusRunning
+	default:
+		return StatusUnknown
+	}
+}
+
 // Stop writes the stop command to the PRU
 func (p *PRU) Stop() error {
 	if p.tx != nil {
@@ -248,4 +280,9 @@ func waitForPermission(name string) (*os.File, error) {
 		time.Sleep(sl)
 	}
 	return f, err
+}
+
+// String returns string value of status.
+func (s Status) String() string {
+	return [...]string{"Offline", "Running", "Unknown"}[s]
 }
