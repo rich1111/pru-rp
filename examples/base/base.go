@@ -41,7 +41,7 @@ func main() {
 	p.Start(true)
 	go func() {
 		// Sleep between 1 and 4 seconds
-		time.Sleep(time.Duration(rand.Int63n(3000)) * time.Millisecond + time.Second)
+		time.Sleep(time.Duration(rand.Intn(3000)) * time.Millisecond + time.Second)
 		p.Stop()
 	}()
 	now := time.Now()
