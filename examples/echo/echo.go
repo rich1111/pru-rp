@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate sudo cp $PRU_SSP/examples/am335x/PRU_Halt/gen/PRU_Halt.out /lib/firmware/am335x-pru0-halt-fw
 //go:generate make -C $PRU_SSP/examples/am335x/PRU_RPMsg_Echo_Interrupt0
 //go:generate make -C $PRU_SSP/examples/am335x/PRU_RPMsg_Echo_Interrupt1
 //go:generate sudo cp $PRU_SSP/examples/am335x/PRU_RPMsg_Echo_Interrupt0/gen/PRU_RPMsg_Echo_Interrupt0.out /lib/firmware/am335x-pru0-echo0-fw
