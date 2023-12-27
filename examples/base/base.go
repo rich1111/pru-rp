@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate make -C am335x/PRU_Halt
-//go:generate sudo cp am335x/PRU_Halt/gen/PRU_Halt.out /lib/firmware/am335x-pru0-halt-fw
+//go:generate make -C $TI_PRU/examples/am335x/PRU_Halt
+//go:generate sudo cp $TI_PRU/examples/am335x/PRU_Halt/gen/PRU_Halt.out /lib/firmware/am335x-pru0-halt-fw
 
 package main
 
