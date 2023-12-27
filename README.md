@@ -9,11 +9,11 @@ godoc for this package is [available](https://pkg.go.dev/github.com/aamcrae/pru-
 
 The examples use firmware from the [TI PRU Software Support package](https://git.ti.com/cgit/pru-software-support-package)
 examples.
-The environment variable TI_PRU should be set to the location of the package, and the `go generate`
+The environment variable PRU_SSP should be set to the location of the package, and the `go generate`
 command can be used to build and install the firmware.
 
 ```
-export TI_PRU=~/git.ti.com/pru-software-support-package
+export PRU_SSP=~/git.ti.com/pru-software-support-package
 cd examples/echo
 go generate
 ```
