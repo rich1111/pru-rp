@@ -6,7 +6,6 @@
 *.dylib
 examples/echo/echo
 examples/base/base
-examples/*/*/*/gen
 
 # Test binary, built with `go test -c`
 *.test

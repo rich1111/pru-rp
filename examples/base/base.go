@@ -41,7 +41,7 @@ func main() {
 	p.Start(true)
 	go func() {
 		// Sleep between 1 and 4 seconds
-		time.Sleep(time.Duration(rand.Intn(3000)) * time.Millisecond + time.Second)
+		time.Sleep(time.Duration(rand.Intn(3000))*time.Millisecond + time.Second)
 		p.Stop()
 	}()
 	now := time.Now()
@@ -53,7 +53,7 @@ func main() {
 		}
 		if s != pru.StatusRunning {
 			log.Printf("PRU halted after %s", time.Now().Sub(now))
-			break;
+			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
