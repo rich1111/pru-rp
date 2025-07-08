@@ -38,6 +38,7 @@ const (
 	RpBufSize  = 512
 	rpmDevBase = "/dev/rpmsg_pru3%d"
 	rpBase     = "/sys/class/remoteproc/remoteproc%d/%s"
+	unitOffset = 2 // Remoteproc units start at 2 for TI AM62x PRU
 )
 
 // AM3xx
@@ -154,7 +155,7 @@ func (p *PRU) Close() {
 
 // Status returns the current status of the PRU
 func (p *PRU) Status() Status {
-	f := fmt.Sprintf(rpBase, p.unit+1, "state")
+	f := fmt.Sprintf(rpBase, p.unit+unitOffset, "state")
 	fd, err := os.OpenFile(f, os.O_RDONLY, 0)
 	if err != nil {
 		return StatusUnknown
@@ -255,7 +256,7 @@ func (p *PRU) Load(name string) error {
 
 // write sends the string to the remoteproc filename
 func (p *PRU) write(name, command string) error {
-	f := fmt.Sprintf(rpBase, p.unit+1, name)
+	f := fmt.Sprintf(rpBase, p.unit+unitOffset, name)
 	fd, err := os.OpenFile(f, os.O_RDWR, 0)
 	if err != nil {
 		return err

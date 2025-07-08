@@ -32,8 +32,8 @@ var counter sync.WaitGroup
 
 func main() {
 	counter.Add(2)
-	go run(0, "am335x-pru0-echo0-fw")
-	go run(1, "am335x-pru1-echo1-fw")
+	go run(0, "PRU_RPMsg_Echo_Interrupt0.out")
+	go run(1, "PRU_RPMsg_Echo_Interrupt1.out")
 	counter.Wait()
 }
 
@@ -53,7 +53,9 @@ func run(unit int, fw string) {
 		log.Printf("PRU%d: Rx OK [%s]", unit, msg)
 		msgs.Done()
 	})
-	p.Start(true)
+	if err := p.Start(true); err != nil {
+		log.Fatalf("PRU%d: Start error: %v", unit, err)
+	}
 	log.Printf("PRU %d state: %s", unit, p.Status().String())
 	for i := 0; i < 10; i++ {
 		msgs.Add(1)
