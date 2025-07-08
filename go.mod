@@ -1,4 +1,4 @@
-module github.com/aamcrae/pru-rp
+module github.com/rich1111/pru-rp
 
 go 1.19
 

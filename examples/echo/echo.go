@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aamcrae/pru-rp"
+	"github.com/rich1111/pru-rp"
 )
 
 var counter sync.WaitGroup
