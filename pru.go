@@ -55,7 +55,7 @@ const (
 )
 
 const (
-	waitTimeout = 2 * time.Second
+	waitTimeout = 5 * time.Second
 )
 
 var Order = binary.LittleEndian

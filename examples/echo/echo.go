@@ -20,6 +20,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"log"
 	"sync"
@@ -27,6 +29,13 @@ import (
 
 	"github.com/rich1111/pru-rp"
 )
+
+type diCounterArray [16]uint32
+
+type diRisingFallingCounterStruct struct {
+	Rising  diCounterArray
+	Falling diCounterArray
+}
 
 var counter sync.WaitGroup
 
@@ -50,14 +59,28 @@ func run(unit int, fw string) {
 	}
 
 	p.Callback(func(msg []byte) {
-		log.Printf("PRU%d: Rx OK [%s]", unit, msg)
+		if unit == 0 {
+			var diCounter diRisingFallingCounterStruct
+			if len(msg) < binary.Size(diCounter) {
+				log.Printf("PRU%d: Rx error: message too short (%d bytes)", unit, len(msg))
+			} else {
+				err := binary.Read(bytes.NewReader(msg), binary.LittleEndian, &diCounter)
+				if err != nil {
+					log.Printf("PRU%d: Rx error: %v", unit, err)
+				} else {
+					log.Printf("PRU%d: Rx OK diCounter: %+v", unit, diCounter)
+				}
+			}
+		} else {
+			log.Printf("PRU%d: Rx OK [%s]", unit, string(msg))
+		}
 		msgs.Done()
 	})
 	if err := p.Start(true); err != nil {
 		log.Fatalf("PRU%d: Start error: %v", unit, err)
 	}
 	log.Printf("PRU %d state: %s", unit, p.Status().String())
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100; i++ {
 		msgs.Add(1)
 		err := p.Send([]byte(fmt.Sprintf("msg %d to PRU%d", i, unit)))
 		if err != nil {
