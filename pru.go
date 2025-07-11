@@ -193,6 +193,7 @@ func (p *PRU) Stop() error {
 // the PRU requires the RPMsg virtual device.
 func (p *PRU) Start(rpmsg bool) error {
 	err := p.write("state", "start")
+	time.Sleep(time.Second)
 	if err == nil {
 		p.tx = nil
 		if rpmsg {
@@ -275,7 +276,7 @@ func waitForPermission(name string) (*os.File, error) {
 	sl := time.Millisecond
 	for tout = 0; tout < waitTimeout; tout += sl {
 		f, err = os.OpenFile(name, os.O_RDWR, 0)
-		if err == nil || !os.IsPermission(err) {
+		if /*err == nil ||*/ !os.IsPermission(err) {
 			break
 		}
 		time.Sleep(sl)

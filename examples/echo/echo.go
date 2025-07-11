@@ -80,7 +80,7 @@ func run(unit int, fw string) {
 		log.Fatalf("PRU%d: Start error: %v", unit, err)
 	}
 	log.Printf("PRU %d state: %s", unit, p.Status().String())
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		msgs.Add(1)
 		err := p.Send([]byte(fmt.Sprintf("msg %d to PRU%d", i, unit)))
 		if err != nil {
